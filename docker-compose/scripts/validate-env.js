@@ -106,6 +106,15 @@ function isValidHttpsUrl(v) {
   }
 }
 
+function buildAppHost(project, domain) {
+  const p = (project || "").trim().toLowerCase();
+  const d = (domain || "").trim().toLowerCase();
+  if (p && d && (d === p || d.startsWith(`${p}.`))) {
+    return domain;
+  }
+  return `${project}.${domain}`;
+}
+
 // 1) Required core env from compose files
 checkRequired("PROJECT_NAME", "docker project/network + subdomain prefix", (v) =>
   /^[a-z0-9][a-z0-9-]*$/.test(v) ? null : "only lowercase letters, numbers, hyphen",
@@ -199,21 +208,23 @@ if (env.ENABLE_TAILSCALE === "true") {
   }
 }
 
-// ── 7) OmniRoute required secrets ─────────────────────────────
+// 7) OmniRoute required secrets and app env
 checkRequired("OMNIROUTE_JWT_SECRET", "OmniRoute JWT signing secret (openssl rand -base64 48)", (v) =>
   v.length >= 32 ? null : "must be at least 32 characters",
 );
 checkRequired("OMNIROUTE_API_KEY_SECRET", "OmniRoute API key HMAC secret (openssl rand -hex 32)", (v) =>
   v.length >= 32 ? null : "must be at least 32 characters",
 );
-checkRequired("STORAGE_ENCRYPTION_KEY", "AES-256-GCM key for credentials (openssl rand -hex 32, KHÔNG ĐỔI sau khi có data)", (v) =>
-  /^[0-9a-fA-F]{64}$/.test(v) ? null : "must be 64 hex characters (32 bytes)",
+checkRequired(
+  "STORAGE_ENCRYPTION_KEY",
+  "AES-256-GCM key for credentials (openssl rand -hex 32, KHÔNG ĐỔI sau khi có data)",
+  (v) => (/^[0-9a-fA-F]{64}$/.test(v) ? null : "must be 64 hex characters (32 bytes)"),
 );
 checkRequired("OMNIROUTE_INITIAL_PASSWORD", "OmniRoute dashboard initial password");
 checkOptional("STORAGE_ENCRYPTION_KEY_VERSION", "encryption key version (default: v1)");
-checkOptional("OMNIROUTE_BASE_URL", "public base URL for OmniRoute dashboard (https://...) ");
+checkOptional("OMNIROUTE_BASE_URL", "public base URL for OmniRoute dashboard (https://...)");
 
-// ── 8) Litestream / S3 required ───────────────────────────────
+// 8) Litestream / Supabase S3 env
 checkRequired("LITESTREAM_S3_ENDPOINT", "Supabase S3 endpoint (https://<project>.supabase.co/storage/v1/s3)", (v) =>
   isValidHttpsUrl(v) ? null : "must be a valid https URL",
 );
@@ -222,14 +233,13 @@ checkRequired("LITESTREAM_S3_ACCESS_KEY_ID", "Supabase S3 access key ID");
 checkRequired("LITESTREAM_S3_SECRET_ACCESS_KEY", "Supabase S3 secret access key");
 checkOptional("LITESTREAM_S3_PATH", "S3 path prefix for litestream (default: omniroute/storage.sqlite)");
 
-// LITESTREAM_INIT_MODE phải là false khi deploy thật
 const initMode = (env.LITESTREAM_INIT_MODE || "false").trim();
 if (!isBool(initMode)) {
   errors.push("LITESTREAM_INIT_MODE must be true|false");
 } else if (initMode === "true") {
   warnings.push(
     "LITESTREAM_INIT_MODE=true — container sẽ bỏ qua restore S3 và tạo data mới. " +
-    "CHỈ dùng local để init, KHÔNG deploy với giá trị này.",
+      "CHỈ dùng local để init, KHÔNG deploy với giá trị này.",
   );
 } else {
   ok.push("LITESTREAM_INIT_MODE=false (normal restore mode)");
@@ -239,10 +249,11 @@ const project = env.PROJECT_NAME || "<project>";
 const domain = env.DOMAIN || "<domain>";
 const host = env.PROJECT_NAME || "myapp";
 const tailnet = env.TAILSCALE_TAILNET_DOMAIN || "tailnet.local";
-ok.push(`subdomain preview: app=${project}.${domain}`);
-if ((env.ENABLE_DOZZLE || "true") === "true") ok.push(`subdomain preview: logs=logs.${project}.${domain}`);
-if ((env.ENABLE_FILEBROWSER || "true") === "true") ok.push(`subdomain preview: files=files.${project}.${domain}`);
-if ((env.ENABLE_WEBSSH || "true") === "true") ok.push(`subdomain preview: ttyd=ttyd.${project}.${domain}`);
+const appHost = buildAppHost(project, domain);
+ok.push(`subdomain preview: app=${appHost}`);
+if ((env.ENABLE_DOZZLE || "true") === "true") ok.push(`subdomain preview: logs=logs.${appHost}`);
+if ((env.ENABLE_FILEBROWSER || "true") === "true") ok.push(`subdomain preview: files=files.${appHost}`);
+if ((env.ENABLE_WEBSSH || "true") === "true") ok.push(`subdomain preview: ttyd=ttyd.${appHost}`);
 if (env.ENABLE_TAILSCALE === "true") {
   const dozzlePort = env.DOZZLE_HOST_PORT || "18080";
   const filesPort = env.FILEBROWSER_HOST_PORT || "18081";
