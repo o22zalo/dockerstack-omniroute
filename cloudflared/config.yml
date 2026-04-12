@@ -1,0 +1,13 @@
+tunnel: 86d40a46-f006-498e-a048-8cdec8fd9dc9
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: main.dockerstackomniroute.dpdns.org
+    service: http://caddy:80
+  - hostname: ttyd.dockerstackomniroute.dpdns.org
+    service: http://caddy:80
+  - hostname: dozzle.dockerstackomniroute.dpdns.org
+    service: http://caddy:80
+  - hostname: files.dockerstackomniroute.dpdns.org
+    service: http://caddy:80
+  - service: http_status:404
