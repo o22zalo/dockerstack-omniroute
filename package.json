@@ -37,7 +37,7 @@
     "dockerapp-exec:exec:app": "bash docker-compose/scripts/dc.sh exec app sh",
     "dockerapp-exec:exec:caddy": "bash docker-compose/scripts/dc.sh exec caddy sh",
     "git-o": "powershell -NoProfile -Command \"Start-Process -FilePath cmd.exe -WorkingDirectory '%CD%' -ArgumentList '/k', 'git o'\"",
-    "git-oexecute": "powershell -NoProfile -Command \"Start-Process -FilePath cmd.exe -WorkingDirectory '%CD%' -ArgumentList '/k', 'git oexecute'\"",
+    "git-oexecute": "powershell -NoProfile -Command \"Start-Process -FilePath cmd.exe -WorkingDirectory '%CD%' -ArgumentList '/k', 'ctrlj&git oexecute'\"",
     "git-oaddcommit": "powershell -NoProfile -Command \"Start-Process -FilePath cmd.exe -WorkingDirectory '%CD%' -ArgumentList '/k', 'git oaddcommit'\"",
     "git-oclone": "powershell -NoProfile -Command \"Start-Process -FilePath cmd.exe -WorkingDirectory '%CD%' -ArgumentList '/k', 'git oclone'\"",
     "git-opull": "powershell -NoProfile -Command \"Start-Process -FilePath cmd.exe -WorkingDirectory '%CD%' -ArgumentList '/k', 'git opull'\"",
